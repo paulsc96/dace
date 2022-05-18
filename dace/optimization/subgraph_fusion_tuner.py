@@ -25,9 +25,11 @@ except (ImportError, ModuleNotFoundError):
 
 class SubgraphFusionTuner(cutout_tuner.CutoutTuner):
 
-    def __init__(self, sdfg: SDFG, i, j, measurement: dtypes.InstrumentationType = dtypes.InstrumentationType.Timer) -> None:
-        super().__init__(task="SubgraphFusion", sdfg=sdfg, i=i, j=j)
+    def __init__(self, sdfg: SDFG, measurement: dtypes.InstrumentationType = dtypes.InstrumentationType.Timer) -> None:
+        super().__init__(task="SubgraphFusion", sdfg=sdfg)
         self.instrument = measurement
+
+        self.n = 0
 
     def cutouts(self, sdfg=None):
         if sdfg is None:
@@ -93,6 +95,7 @@ class SubgraphFusionTuner(cutout_tuner.CutoutTuner):
         return new_kwargs
 
     def evaluate(self, config, cutout, measurements: int, **kwargs) -> float:
+        self.n = self.n + 1
         dreport = self._sdfg.get_instrumented_data()
         
         candidate = dace.SDFG.from_json(cutout)

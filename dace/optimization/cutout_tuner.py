@@ -95,8 +95,8 @@ class CutoutTuner(auto_tuner.AutoTuner):
             except:
                 continue
         
-        runtime = optim_utils.subprocess_measure(cutout=cutout, dreport=dreport_, repetitions=repetitions, timeout=timeout)
-        return runtime
+        #runtime = optim_utils.subprocess_measure(cutout=cutout, dreport=dreport_, repetitions=repetitions, timeout=timeout)
+        return math.inf
 
     def optimize(self, measurements: int = 30, apply: bool = False, **kwargs) -> Dict[Any, Any]:
         tuning_report = {}
