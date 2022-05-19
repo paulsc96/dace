@@ -11,10 +11,19 @@ from dace.optimization import utils as optim_utils
 from dace.sdfg.sdfg import SDFG
 from dace.sdfg.state import SDFGState
 
+from dace.transformation.estimator import enumeration as en
+
 try:
     from tqdm import tqdm
 except (ImportError, ModuleNotFoundError):
     tqdm = lambda x, **kwargs: x
+
+
+def count(c):
+    print(c)
+    cutout, label = c
+    enume = en.ConnectedEnumerator(cutout, cutout.start_state)
+    return len(list(enume)) + 1
 
 
 class CutoutTuner(auto_tuner.AutoTuner):
@@ -100,6 +109,20 @@ class CutoutTuner(auto_tuner.AutoTuner):
 
     def optimize(self, measurements: int = 30, apply: bool = False, **kwargs) -> Dict[Any, Any]:
         tuning_report = {}
+
+        cutouts = list(self.cutouts())
+        print("Num cutouts: ", len(cutouts))            
+
+        import multiprocessing
+        pool = multiprocessing.Pool()
+        res = pool.map(count, cutouts)
+        
+        with open("list.json", "w") as handle:
+            json.dump(res, handle)
+
+        print("Num configs: ", sum(res))
+        exit()
+
         for cutout, label in tqdm(list(self.cutouts())):
             fn = self.file_name(label)
             results = self.try_load(fn)

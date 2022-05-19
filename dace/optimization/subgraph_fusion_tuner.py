@@ -54,25 +54,8 @@ class SubgraphFusionTuner(cutout_tuner.CutoutTuner):
         return sp[fusion_id]
 
     def apply(self, config: Tuple[int, List[int]], label: str, **kwargs) -> None:
-        if config[0] == 0:
-            return
+        return
 
-        nsdfg_id, state_id, _ = label.split(".")
-        sdfg = list(self._sdfg.all_sdfgs_recursive())[int(nsdfg_id)]
-        state_id = int(state_id)
-        state = sdfg.node(state_id)
-        nodes = state.nodes()
-        cutout = cutter.cutout_state(state, *(nodes), make_copy=False)
-
-        map_ids = config[1]
-        maps_ = list(map(cutout.start_state.node, map_ids))
-        subgraph = helpers.subgraph_from_maps(sdfg=sdfg, graph=state, map_entries=maps_)
-
-        subgraph_fusion = sg.CompositeFusion(subgraph, sdfg.sdfg_id, state_id)
-        subgraph_fusion.allow_tiling = True
-        subgraph_fusion.schedule_innermaps = dace.ScheduleType.GPU_Device
-        if subgraph_fusion.can_be_applied(sdfg, subgraph):
-            subgraph_fusion.apply(sdfg)
 
     def space(self, cutout: dace.SDFG) -> Generator[List[bool], None, None]:
         subgraphs = en.ConnectedEnumerator(cutout, cutout.start_state)
