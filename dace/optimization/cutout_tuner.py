@@ -13,18 +13,48 @@ from dace.sdfg.state import SDFGState
 
 from dace.transformation.estimator import enumeration as en
 
+from pathlib import Path
+
 try:
     from tqdm import tqdm
 except (ImportError, ModuleNotFoundError):
     tqdm = lambda x, **kwargs: x
 
+def found(c):
+    cutout, label = c
+
+    state_name = label.split(".")[-1]
+    cwd = Path.cwd()
+    files = list(cwd.rglob(f"*.*.{state_name}"))
+
+    if len(files) > 0:
+        with open(files[0], "r") as handle:
+            n = int(handle.readline())
+            return False
+
+    return True
 
 def count(c):
-    print(c)
     cutout, label = c
-    enume = en.ConnectedEnumerator(cutout, cutout.start_state)
-    return len(list(enume)) + 1
+    
+    state_name = label.split(".")[-1]
+    cwd = Path.cwd()
+    files = list(cwd.rglob(f"*.*.{state_name}"))
+    
+    if len(files) > 0:
+        with open(files[0], "r") as handle:
+            n = int(handle.readline())
+            print(state_name, n)
+            return n
 
+    enume = en.ConnectedEnumerator(cutout, cutout.start_state)
+    n = sum(1 for _ in enume) + 1
+
+    with open(label, "w") as handle:
+        handle.write(str(n))
+
+    print(c, n)
+    return n
 
 class CutoutTuner(auto_tuner.AutoTuner):
     """
@@ -113,9 +143,12 @@ class CutoutTuner(auto_tuner.AutoTuner):
         cutouts = list(self.cutouts())
         print("Num cutouts: ", len(cutouts))            
 
-        import multiprocessing
-        pool = multiprocessing.Pool()
-        res = pool.map(count, cutouts)
+
+        from tqdm.contrib.concurrent import process_map
+       
+        cutouts = list(filter(lambda c: found(c), cutouts))
+        print(cutouts)
+        res = process_map(count, cutouts, chunksize=1, max_workers=32)
         
         with open("list.json", "w") as handle:
             json.dump(res, handle)

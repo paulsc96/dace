@@ -10,11 +10,11 @@ from dace.sdfg import infer_types
 
 if __name__ == '__main__':
 
-    sdfg_path = Path(__file__).parent.parent.parent / "hI_8.sdfg"
+    sdfg_path = Path("/users/ltruempe/Documents/repos/dace/") / "hI_8.sdfg"
     sdfg = dace.SDFG.from_file(sdfg_path)
 
-    infer_types.infer_connector_types(sdfg)
-    infer_types.set_default_schedule_and_storage_types(sdfg, None)
+    #infer_types.infer_connector_types(sdfg)
+    #infer_types.set_default_schedule_and_storage_types(sdfg, None)
 
     dreport = None
 
